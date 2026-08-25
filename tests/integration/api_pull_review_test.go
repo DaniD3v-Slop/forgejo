@@ -810,3 +810,55 @@ func reviewsCountCheck(t *testing.T, name string, issueID, reviewerID int64, exp
 		}, approvalCount)
 	})
 }
+
+func TestAPIPullReviewResolveConversation(t *testing.T) {
+	defer tests.PrepareTestEnv(t)()
+
+	// comment 4 is a code review comment on pull request issue 2 in repo user2/repo1
+	repo := unittest.AssertExistsAndLoadBean(t, &repo_model.Repository{ID: 1})
+	const codeCommentID = 4
+
+	resolveURL := fmt.Sprintf("/api/v1/repos/%s/pulls/comments/%d/resolve", repo.FullName(), codeCommentID)
+	unresolveURL := fmt.Sprintf("/api/v1/repos/%s/pulls/comments/%d/unresolve", repo.FullName(), codeCommentID)
+
+	// user2 owns the repository and may resolve conversations
+	ownerSession := loginUser(t, "user2")
+	ownerToken := getTokenForLoggedInUser(t, ownerSession, auth_model.AccessTokenScopeWriteRepository)
+
+	t.Run("Resolve", func(t *testing.T) {
+		req := NewRequest(t, http.MethodPost, resolveURL).AddTokenAuth(ownerToken)
+		MakeRequest(t, req, http.StatusNoContent)
+
+		comment := unittest.AssertExistsAndLoadBean(t, &issues_model.Comment{ID: codeCommentID})
+		assert.NotZero(t, comment.ResolveDoerID)
+	})
+
+	t.Run("Unresolve", func(t *testing.T) {
+		req := NewRequest(t, http.MethodPost, unresolveURL).AddTokenAuth(ownerToken)
+		MakeRequest(t, req, http.StatusNoContent)
+
+		comment := unittest.AssertExistsAndLoadBean(t, &issues_model.Comment{ID: codeCommentID})
+		assert.Zero(t, comment.ResolveDoerID)
+	})
+
+	t.Run("Forbidden", func(t *testing.T) {
+		// user4 is neither the poster, a collaborator, nor an official reviewer
+		session := loginUser(t, "user4")
+		token := getTokenForLoggedInUser(t, session, auth_model.AccessTokenScopeWriteRepository)
+
+		req := NewRequest(t, http.MethodPost, resolveURL).AddTokenAuth(token)
+		MakeRequest(t, req, http.StatusForbidden)
+	})
+
+	t.Run("NotACodeComment", func(t *testing.T) {
+		// comment 2 is a plain comment on issue 1 (not a pull request review comment)
+		req := NewRequest(t, http.MethodPost, fmt.Sprintf("/api/v1/repos/%s/pulls/comments/2/resolve", repo.FullName())).AddTokenAuth(ownerToken)
+		MakeRequest(t, req, http.StatusBadRequest)
+	})
+
+	t.Run("WrongRepo", func(t *testing.T) {
+		// comment 8 belongs to an issue in repo user2/repo2, not repo1
+		req := NewRequest(t, http.MethodPost, fmt.Sprintf("/api/v1/repos/%s/pulls/comments/8/resolve", repo.FullName())).AddTokenAuth(ownerToken)
+		MakeRequest(t, req, http.StatusNotFound)
+	})
+}

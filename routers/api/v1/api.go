@@ -1025,6 +1025,10 @@ func Routes() *web.Route {
 							Delete(bind(api.PullReviewRequestOptions{}), repo.DeleteReviewRequests).
 							Post(bind(api.PullReviewRequestOptions{}), repo.CreateReviewRequests)
 					})
+					m.Group("/comments/{id}", func() {
+						m.Post("/resolve", repo.ResolvePullReviewComment)
+						m.Post("/unresolve", repo.UnresolvePullReviewComment)
+					}, reqToken(), mustNotBeArchived(), reqValidCommentID("id"))
 					m.Get("/{base}/*", repo.GetPullRequestByBaseHead)
 				}, mustAllowPulls(), reqRepoReader(unit.TypeCode), context.ReferencesGitRepo())
 				m.Group("/statuses", func() {

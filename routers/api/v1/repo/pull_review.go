@@ -1099,6 +1099,109 @@ func DeletePullReviewComment(ctx *context.APIContext) {
 	deleteIssueComment(ctx, "comment", issues_model.CommentTypeCode)
 }
 
+// ResolvePullReviewComment marks the conversation of a pull review comment as resolved
+func ResolvePullReviewComment(ctx *context.APIContext) {
+	// swagger:operation POST /repos/{owner}/{repo}/pulls/comments/{id}/resolve repository repoResolvePullReviewComment
+	// ---
+	// summary: Resolve the conversation of a pull request review comment
+	// produces:
+	// - application/json
+	// parameters:
+	// - name: owner
+	//   in: path
+	//   description: owner of the repo
+	//   type: string
+	//   required: true
+	// - name: repo
+	//   in: path
+	//   description: name of the repo
+	//   type: string
+	//   required: true
+	// - name: id
+	//   in: path
+	//   description: id of the review comment
+	//   type: integer
+	//   format: int64
+	//   required: true
+	// responses:
+	//   "204":
+	//     "$ref": "#/responses/empty"
+	//   "400":
+	//     "$ref": "#/responses/error"
+	//   "403":
+	//     "$ref": "#/responses/forbidden"
+	//   "404":
+	//     "$ref": "#/responses/notFound"
+
+	markPullReviewConversation(ctx, true)
+}
+
+// UnresolvePullReviewComment marks the conversation of a pull review comment as unresolved
+func UnresolvePullReviewComment(ctx *context.APIContext) {
+	// swagger:operation POST /repos/{owner}/{repo}/pulls/comments/{id}/unresolve repository repoUnresolvePullReviewComment
+	// ---
+	// summary: Unresolve the conversation of a pull request review comment
+	// produces:
+	// - application/json
+	// parameters:
+	// - name: owner
+	//   in: path
+	//   description: owner of the repo
+	//   type: string
+	//   required: true
+	// - name: repo
+	//   in: path
+	//   description: name of the repo
+	//   type: string
+	//   required: true
+	// - name: id
+	//   in: path
+	//   description: id of the review comment
+	//   type: integer
+	//   format: int64
+	//   required: true
+	// responses:
+	//   "204":
+	//     "$ref": "#/responses/empty"
+	//   "400":
+	//     "$ref": "#/responses/error"
+	//   "403":
+	//     "$ref": "#/responses/forbidden"
+	//   "404":
+	//     "$ref": "#/responses/notFound"
+
+	markPullReviewConversation(ctx, false)
+}
+
+func markPullReviewConversation(ctx *context.APIContext, isResolve bool) {
+	comment := ctx.LoadComment("id")
+	if ctx.Written() {
+		return
+	}
+
+	if comment.Type != issues_model.CommentTypeCode || !comment.Issue.IsPull {
+		ctx.Error(http.StatusBadRequest, "", "comment is not a pull request review comment")
+		return
+	}
+
+	canMark, err := issues_model.CanMarkConversation(ctx, comment.Issue, ctx.Doer())
+	if err != nil {
+		ctx.InternalServerError(err)
+		return
+	}
+	if !canMark {
+		ctx.Error(http.StatusForbidden, "", "you are not allowed to resolve this conversation")
+		return
+	}
+
+	if err := issues_model.MarkConversation(ctx, comment, ctx.Doer(), isResolve); err != nil {
+		ctx.InternalServerError(err)
+		return
+	}
+
+	ctx.Status(http.StatusNoContent)
+}
+
 func dismissReview(ctx *context.APIContext, msg string, isDismiss, dismissPriors bool) {
 	if !ctx.IsUserRepoAdmin() {
 		ctx.Error(http.StatusForbidden, "", "Must be repo admin")
