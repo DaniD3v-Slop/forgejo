@@ -667,6 +667,46 @@ func (m msteamsConvertor) IssueComment(p *api.IssueCommentPayload) (MSTeamsPaylo
 	), nil
 }
 
+// Mention implements PayloadConvertor Mention method
+func (m msteamsConvertor) Mention(p *api.MentionPayload) (MSTeamsPayload, error) {
+	actionTitle, _, _ := msTeamsPayloadFormatter.getMentionPayloadInfo(p)
+
+	link := p.Issue.HTMLURL
+	var bodySections []MSTeamsContainer
+	if p.Comment != nil {
+		link = p.Comment.HTMLURL
+		bodySections = []MSTeamsContainer{
+			{
+				Type:       "Container",
+				Style:      emphasisStyle,
+				ShowBorder: new(true),
+				Items: []any{
+					MSTeamsTextBlock{
+						Type:   "TextBlock",
+						Text:   "Comment",
+						Size:   "Small",
+						Weight: "Bolder",
+					},
+					MSTeamsTextBlock{
+						Type: "TextBlock",
+						Text: p.Comment.Body,
+						Wrap: new(true),
+					},
+				},
+			},
+		}
+	}
+
+	return createMSTeamsPayload(
+		p.Repository,
+		p.Sender,
+		actionTitle,
+		bodySections,
+		link,
+		defaultStyle,
+	), nil
+}
+
 // PullRequest implements PayloadConvertor PullRequest method
 func (m msteamsConvertor) PullRequest(p *api.PullRequestPayload) (MSTeamsPayload, error) {
 	actionTitle, _, attachmentText, _ := msTeamsPayloadFormatter.getPullRequestPayloadInfo(p)

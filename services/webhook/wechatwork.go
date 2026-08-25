@@ -149,6 +149,19 @@ func (wc wechatworkConvertor) IssueComment(p *api.IssueCommentPayload) (Wechatwo
 	return newWechatworkMarkdownPayload(content), nil
 }
 
+// Mention implements PayloadConvertor Mention method
+func (wc wechatworkConvertor) Mention(p *api.MentionPayload) (WechatworkPayload, error) {
+	text, issueTitle, _ := wechatworkPayloadFormatter.getMentionPayloadInfo(p)
+
+	body, link := "", p.Issue.HTMLURL
+	if p.Comment != nil {
+		body, link = p.Comment.Body, p.Comment.HTMLURL
+	}
+	content := fmt.Sprintf(" ><font color=\"info\">%s</font>\n >%s \n ><font color=\"warning\">%s</font> \n [%s](%s)", text, body, issueTitle, link, link)
+
+	return newWechatworkMarkdownPayload(content), nil
+}
+
 // PullRequest implements PayloadConvertor PullRequest method
 func (wc wechatworkConvertor) PullRequest(p *api.PullRequestPayload) (WechatworkPayload, error) {
 	text, issueTitle, attachmentText, _ := wechatworkPayloadFormatter.getPullRequestPayloadInfo(p)

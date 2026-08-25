@@ -253,6 +253,18 @@ func (d discordConvertor) IssueComment(p *api.IssueCommentPayload) (DiscordPaylo
 	return d.createPayload(p.Sender, title, p.Comment.Body, p.Comment.HTMLURL, color), nil
 }
 
+// Mention implements PayloadConvertor Mention method
+func (d discordConvertor) Mention(p *api.MentionPayload) (DiscordPayload, error) {
+	title, _, color := discordPayloadFormatter.getMentionPayloadInfo(p)
+
+	body, link := "", p.Issue.HTMLURL
+	if p.Comment != nil {
+		body, link = p.Comment.Body, p.Comment.HTMLURL
+	}
+
+	return d.createPayload(p.Sender, title, body, link, color), nil
+}
+
 // PullRequest implements PayloadConvertor PullRequest method
 func (d discordConvertor) PullRequest(p *api.PullRequestPayload) (DiscordPayload, error) {
 	title, _, text, color := discordPayloadFormatter.getPullRequestPayloadInfo(p)

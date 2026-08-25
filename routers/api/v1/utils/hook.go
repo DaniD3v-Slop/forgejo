@@ -207,6 +207,7 @@ func addHook(ctx *context.APIContext, form *api.CreateHookOption, ownerID, repoI
 				PullRequestReview:        pullHook(form.Events, "pull_request_review"),
 				PullRequestReviewRequest: pullHook(form.Events, string(webhook_module.HookEventPullRequestReviewRequest)),
 				PullRequestSync:          pullHook(form.Events, string(webhook_module.HookEventPullRequestSync)),
+				Mention:                  util.SliceContainsString(form.Events, string(webhook_module.HookEventMention), true),
 				Wiki:                     util.SliceContainsString(form.Events, string(webhook_module.HookEventWiki), true),
 				Repository:               util.SliceContainsString(form.Events, string(webhook_module.HookEventRepository), true),
 				Release:                  util.SliceContainsString(form.Events, string(webhook_module.HookEventRelease), true),
@@ -393,6 +394,9 @@ func editHook(ctx *context.APIContext, form *api.EditHookOption, w *webhook.Webh
 	w.PullRequestReview = pullHook(form.Events, "pull_request_review")
 	w.PullRequestReviewRequest = pullHook(form.Events, string(webhook_module.HookEventPullRequestReviewRequest))
 	w.PullRequestSync = pullHook(form.Events, string(webhook_module.HookEventPullRequestSync))
+
+	// Mention
+	w.Mention = util.SliceContainsString(form.Events, string(webhook_module.HookEventMention), true)
 
 	if err := w.UpdateEvent(); err != nil {
 		ctx.Error(http.StatusInternalServerError, "UpdateEvent", err)

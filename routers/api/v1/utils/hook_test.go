@@ -108,6 +108,7 @@ func TestHookEventInclusion(t *testing.T) {
 			string(webhook_module.HookEventIssues),
 			string(webhook_module.HookEventPush),
 			string(webhook_module.HookEventPullRequest),
+			string(webhook_module.HookEventMention),
 			string(webhook_module.HookEventWiki),
 			string(webhook_module.HookEventRepository),
 			string(webhook_module.HookEventRelease),

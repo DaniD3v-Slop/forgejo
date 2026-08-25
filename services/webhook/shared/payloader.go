@@ -29,6 +29,7 @@ type PayloadConvertor[T any] interface {
 	Fork(*api.ForkPayload) (T, error)
 	Issue(*api.IssuePayload) (T, error)
 	IssueComment(*api.IssueCommentPayload) (T, error)
+	Mention(*api.MentionPayload) (T, error)
 	Push(*api.PushPayload) (T, error)
 	PullRequest(*api.PullRequestPayload) (T, error)
 	Review(*api.PullRequestPayload, webhook_module.HookEventType) (T, error)
@@ -70,6 +71,8 @@ func NewPayload[T any](rc PayloadConvertor[T], data []byte, event webhook_module
 
 		// In modules/actions/workflows.go:183 the type assertion is always payload.(*api.IssueCommentPayload)
 		return convertUnmarshalledJSON(rc.IssueComment, data)
+	case webhook_module.HookEventMention:
+		return convertUnmarshalledJSON(rc.Mention, data)
 	case webhook_module.HookEventPush:
 		return convertUnmarshalledJSON(rc.Push, data)
 	case webhook_module.HookEventPullRequest, webhook_module.HookEventPullRequestAssign, webhook_module.HookEventPullRequestLabel,

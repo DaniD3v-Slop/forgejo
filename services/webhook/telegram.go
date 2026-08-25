@@ -155,6 +155,17 @@ func (t telegramConvertor) IssueComment(p *api.IssueCommentPayload) (TelegramPay
 	return createTelegramPayload(text + "\n" + p.Comment.Body), nil
 }
 
+// Mention implements PayloadConvertor Mention method
+func (t telegramConvertor) Mention(p *api.MentionPayload) (TelegramPayload, error) {
+	text, _, _ := telegramPayloadFormatter.getMentionPayloadInfo(p)
+
+	if p.Comment != nil {
+		text += "\n" + p.Comment.Body
+	}
+
+	return createTelegramPayload(text), nil
+}
+
 // PullRequest implements PayloadConvertor PullRequest method
 func (t telegramConvertor) PullRequest(p *api.PullRequestPayload) (TelegramPayload, error) {
 	text, _, attachmentText, _ := telegramPayloadFormatter.getPullRequestPayloadInfo(p)

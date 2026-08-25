@@ -310,6 +310,33 @@ func (wpf webhookPayloadFormatter) getIssueCommentPayloadInfo(p *api.IssueCommen
 	return text, issueTitle, color
 }
 
+func (wpf webhookPayloadFormatter) getMentionPayloadInfo(p *api.MentionPayload) (text, issueTitle string, color int) {
+	issueTitle = fmt.Sprintf("#%d %s", p.Issue.Index, p.Issue.Title)
+
+	typ := "issue"
+	if p.IsPull {
+		typ = "pull request"
+	}
+
+	link := p.Issue.HTMLURL
+	if p.Comment != nil {
+		link = p.Comment.HTMLURL
+	}
+	titleLink := wpf.linkFormatter(link, issueTitle)
+
+	text = fmt.Sprintf("%s was mentioned on %s %s", wpf.nameFormatter(p.Mentioned.UserName), typ, titleLink)
+	color = yellowColor
+
+	if wpf.withRepoName {
+		text = fmt.Sprintf("[%s] %s", p.Repository.FullName, text)
+	}
+	if wpf.withSender {
+		text += fmt.Sprintf(" by %s", wpf.nameFormatter(p.Sender.UserName))
+	}
+
+	return text, issueTitle, color
+}
+
 func (wpf webhookPayloadFormatter) getPackagePayloadInfo(p *api.PackagePayload) (text string, color int) {
 	refLink := wpf.linkFormatter(p.Package.HTMLURL, p.Package.Name+":"+p.Package.Version)
 

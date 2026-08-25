@@ -279,6 +279,7 @@ type WebhookCoreForm struct {
 	PullRequestReview        bool
 	PullRequestSync          bool
 	PullRequestReviewRequest bool
+	Mention                  bool
 	Wiki                     bool
 	Repository               bool
 	Package                  bool

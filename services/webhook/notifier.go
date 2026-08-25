@@ -268,6 +268,48 @@ func (m *webhookNotifier) IssueChangeStatus(ctx context.Context, doer *user_mode
 	}
 }
 
+// prepareMentionWebhooks delivers one mention webhook per mentioned user. The
+// mentions slice is expected to already be filtered by issue visibility.
+func prepareMentionWebhooks(ctx context.Context, sender *user_model.User, repo *repo_model.Repository, issue *issues_model.Issue, comment *issues_model.Comment, mentions []*user_model.User) {
+	if len(mentions) == 0 {
+		return
+	}
+
+	var pullRequest *api.PullRequest
+	if issue.IsPull {
+		if err := issue.LoadPullRequest(ctx); err != nil {
+			log.Error("LoadPullRequest: %v", err)
+			return
+		}
+		pullRequest = convert.ToAPIPullRequest(ctx, issue.PullRequest, sender)
+	}
+
+	permission, _ := access_model.GetUserRepoPermission(ctx, repo, sender)
+	apiIssue := convert.ToAPIIssue(ctx, sender, issue)
+	apiRepo := convert.ToRepo(ctx, repo, permission)
+	apiSender := convert.ToUser(ctx, sender, nil)
+
+	var apiComment *api.Comment
+	if comment != nil {
+		apiComment = convert.ToAPIComment(ctx, repo, comment)
+	}
+
+	for _, mentioned := range mentions {
+		if err := PrepareWebhooks(ctx, EventSource{Repository: repo}, webhook_module.HookEventMention, &api.MentionPayload{
+			Action:      api.HookMentionMentioned,
+			Mentioned:   convert.ToUser(ctx, mentioned, nil),
+			Issue:       apiIssue,
+			Comment:     apiComment,
+			PullRequest: pullRequest,
+			Repository:  apiRepo,
+			Sender:      apiSender,
+			IsPull:      issue.IsPull,
+		}); err != nil {
+			log.Error("PrepareWebhooks (mention) [issue_id: %d, mentioned_id: %d]: %v", issue.ID, mentioned.ID, err)
+		}
+	}
+}
+
 func (m *webhookNotifier) NewIssue(ctx context.Context, issue *issues_model.Issue, mentions []*user_model.User) {
 	if err := issue.LoadRepo(ctx); err != nil {
 		log.Error("issue.LoadRepo: %v", err)
@@ -288,6 +330,8 @@ func (m *webhookNotifier) NewIssue(ctx context.Context, issue *issues_model.Issu
 	}); err != nil {
 		log.Error("PrepareWebhooks: %v", err)
 	}
+
+	prepareMentionWebhooks(ctx, issue.Poster, issue.Repo, issue, nil, mentions)
 }
 
 func (m *webhookNotifier) NewPullRequest(ctx context.Context, pull *issues_model.PullRequest, mentions []*user_model.User) {
@@ -314,6 +358,8 @@ func (m *webhookNotifier) NewPullRequest(ctx context.Context, pull *issues_model
 	}); err != nil {
 		log.Error("PrepareWebhooks: %v", err)
 	}
+
+	prepareMentionWebhooks(ctx, pull.Issue.Poster, pull.Issue.Repo, pull.Issue, nil, mentions)
 }
 
 func (m *webhookNotifier) IssueChangeContent(ctx context.Context, doer *user_model.User, issue *issues_model.Issue, oldContent string) {
@@ -431,6 +477,8 @@ func (m *webhookNotifier) CreateIssueComment(ctx context.Context, doer *user_mod
 	}); err != nil {
 		log.Error("PrepareWebhooks [comment_id: %d]: %v", comment.ID, err)
 	}
+
+	prepareMentionWebhooks(ctx, doer, repo, issue, comment, mentions)
 }
 
 func (m *webhookNotifier) DeleteComment(ctx context.Context, doer *user_model.User, comment *issues_model.Comment) {
@@ -736,6 +784,8 @@ func (m *webhookNotifier) PullRequestReview(ctx context.Context, pr *issues_mode
 	}); err != nil {
 		log.Error("PrepareWebhooks: %v", err)
 	}
+
+	prepareMentionWebhooks(ctx, review.Reviewer, review.Issue.Repo, review.Issue, comment, mentions)
 }
 
 func (m *webhookNotifier) PullRequestReviewRequest(ctx context.Context, doer *user_model.User, issue *issues_model.Issue, reviewer *user_model.User, isRequest bool, comment *issues_model.Comment) {

@@ -316,6 +316,12 @@ func (w *Webhook) HasPullRequestReviewRequestEvent() bool {
 		(w.ChooseEvents && w.PullRequestReviewRequest)
 }
 
+// HasMentionEvent returns true if hook enabled mention event.
+func (w *Webhook) HasMentionEvent() bool {
+	return w.SendEverything ||
+		(w.ChooseEvents && w.Mention)
+}
+
 // EventCheckers returns event checkers
 func (w *Webhook) EventCheckers() []struct {
 	Has  func() bool
@@ -348,6 +354,7 @@ func (w *Webhook) EventCheckers() []struct {
 		{w.HasReleaseEvent, webhook_module.HookEventRelease},
 		{w.HasPackageEvent, webhook_module.HookEventPackage},
 		{w.HasPullRequestReviewRequestEvent, webhook_module.HookEventPullRequestReviewRequest},
+		{w.HasMentionEvent, webhook_module.HookEventMention},
 		{w.HasActionRunFailureEvent, webhook_module.HookEventActionRunFailure},
 		{w.HasActionRunSuccessEvent, webhook_module.HookEventActionRunSuccess},
 	}

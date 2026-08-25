@@ -160,6 +160,11 @@ func (pc sourcehutConvertor) IssueComment(_ *api.IssueCommentPayload) (graphqlPa
 	return graphqlPayload[buildsVariables]{}, shared.ErrPayloadTypeNotSupported
 }
 
+// Mention implements PayloadConvertor Mention method
+func (pc sourcehutConvertor) Mention(_ *api.MentionPayload) (graphqlPayload[buildsVariables], error) {
+	return graphqlPayload[buildsVariables]{}, shared.ErrPayloadTypeNotSupported
+}
+
 // PullRequest implements PayloadConvertor PullRequest method
 func (pc sourcehutConvertor) PullRequest(_ *api.PullRequestPayload) (graphqlPayload[buildsVariables], error) {
 	// TODO

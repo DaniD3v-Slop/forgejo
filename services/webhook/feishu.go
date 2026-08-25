@@ -139,6 +139,17 @@ func (fc feishuConvertor) IssueComment(p *api.IssueCommentPayload) (FeishuPayloa
 	return newFeishuTextPayload(fmt.Sprintf("%s\n%s\n%s\n%s\n\n%s", title, link, by, operator, p.Comment.Body)), nil
 }
 
+// Mention implements PayloadConvertor Mention method
+func (fc feishuConvertor) Mention(p *api.MentionPayload) (FeishuPayload, error) {
+	text, _, _ := feishuPayloadFormatter.getMentionPayloadInfo(p)
+
+	if p.Comment != nil {
+		text += "\n" + p.Comment.Body
+	}
+
+	return newFeishuTextPayload(text), nil
+}
+
 // PullRequest implements PayloadConvertor PullRequest method
 func (fc feishuConvertor) PullRequest(p *api.PullRequestPayload) (FeishuPayload, error) {
 	title, link, by, operator, result, assignees := getPullRequestInfo(p, noneNameFormatter)

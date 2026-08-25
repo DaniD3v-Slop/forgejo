@@ -240,6 +240,41 @@ func pullRequestCommentTestPayload() *api.IssueCommentPayload {
 	}
 }
 
+func mentionTestPayload() *api.MentionPayload {
+	return &api.MentionPayload{
+		Action: api.HookMentionMentioned,
+		Mentioned: &api.User{
+			UserName:  "user2",
+			AvatarURL: "http://localhost:3000/user2/avatar",
+		},
+		Sender: &api.User{
+			UserName:  "user1",
+			AvatarURL: "http://localhost:3000/user1/avatar",
+		},
+		Repository: &api.Repository{
+			HTMLURL:  "http://localhost:3000/test/repo",
+			Name:     "repo",
+			FullName: "test/repo",
+		},
+		Comment: &api.Comment{
+			HTMLURL:  "http://localhost:3000/test/repo/issues/2#issuecomment-4",
+			IssueURL: "http://localhost:3000/test/repo/issues/2",
+			Body:     "hey @user2 please look",
+		},
+		Issue: &api.Issue{
+			ID:      2,
+			Index:   2,
+			URL:     "http://localhost:3000/api/v1/repos/test/repo/issues/2",
+			HTMLURL: "http://localhost:3000/test/repo/issues/2",
+			Title:   "crash",
+			Poster: &api.User{
+				UserName:  "user1",
+				AvatarURL: "http://localhost:3000/user1/avatar",
+			},
+		},
+	}
+}
+
 func wikiTestPayload() *api.WikiPayload {
 	return &api.WikiPayload{
 		Repository: &api.Repository{

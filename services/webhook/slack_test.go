@@ -79,6 +79,15 @@ func TestSlackPayload(t *testing.T) {
 		assert.Equal(t, "[test/repo] New comment on issue <http://localhost:3000/test/repo/issues/2|#2 crash> by `user1`", pl.Text)
 	})
 
+	t.Run("Mention", func(t *testing.T) {
+		p := mentionTestPayload()
+
+		pl, err := sc.Mention(p)
+		require.NoError(t, err)
+
+		assert.Equal(t, "[test/repo] `user2` was mentioned on issue <http://localhost:3000/test/repo/issues/2#issuecomment-4|#2 crash> by `user1`", pl.Text)
+	})
+
 	t.Run("PullRequest", func(t *testing.T) {
 		p := pullRequestTestPayload()
 
