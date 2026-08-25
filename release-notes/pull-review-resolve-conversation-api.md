@@ -1,0 +1,1 @@
+feat: add API endpoints to resolve and unresolve a pull request review conversation: `POST /repos/{owner}/{repo}/pulls/comments/{id}/resolve` and `POST /repos/{owner}/{repo}/pulls/comments/{id}/unresolve`.
