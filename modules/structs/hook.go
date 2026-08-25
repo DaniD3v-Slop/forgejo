@@ -217,6 +217,31 @@ func (p *IssueCommentPayload) JSONPayload() ([]byte, error) {
 	return json.MarshalIndent(p, "", "  ")
 }
 
+// HookMentionAction defines hook mention action type
+type HookMentionAction string
+
+// all mention actions
+const (
+	HookMentionMentioned HookMentionAction = "mentioned"
+)
+
+// MentionPayload represents a payload information of a mention event.
+type MentionPayload struct {
+	Action      HookMentionAction `json:"action"`
+	Mentioned   *User             `json:"mentioned"`
+	Issue       *Issue            `json:"issue"`
+	Comment     *Comment          `json:"comment,omitempty"`
+	PullRequest *PullRequest      `json:"pull_request,omitempty"`
+	Repository  *Repository       `json:"repository"`
+	Sender      *User             `json:"sender"`
+	IsPull      bool              `json:"is_pull"`
+}
+
+// JSONPayload implements Payload
+func (p *MentionPayload) JSONPayload() ([]byte, error) {
+	return json.MarshalIndent(p, "", "  ")
+}
+
 // __________       .__
 // \______   \ ____ |  |   ____ _____    ______ ____
 //  |       _// __ \|  | _/ __ \\__  \  /  ___// __ \

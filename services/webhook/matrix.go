@@ -183,6 +183,13 @@ func (m matrixConvertor) IssueComment(p *api.IssueCommentPayload) (MatrixPayload
 	return m.newPayload(text)
 }
 
+// Mention implements payloadConvertor Mention method
+func (m matrixConvertor) Mention(p *api.MentionPayload) (MatrixPayload, error) {
+	text, _, _ := matrixPayloadFormatter.getMentionPayloadInfo(p)
+
+	return m.newPayload(text)
+}
+
 // Wiki implements payloadConvertor Wiki method
 func (m matrixConvertor) Wiki(p *api.WikiPayload) (MatrixPayload, error) {
 	text, _, _ := matrixPayloadFormatter.getWikiPayloadInfo(p, true)

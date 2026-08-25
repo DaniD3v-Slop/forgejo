@@ -210,6 +210,23 @@ func (s slackConvertor) IssueComment(p *api.IssueCommentPayload) (SlackPayload, 
 	}}), nil
 }
 
+// Mention implements payloadConvertor Mention method
+func (s slackConvertor) Mention(p *api.MentionPayload) (SlackPayload, error) {
+	text, issueTitle, color := slackPayloadFormatter.getMentionPayloadInfo(p)
+
+	body, link := "", p.Issue.HTMLURL
+	if p.Comment != nil {
+		body, link = p.Comment.Body, p.Comment.HTMLURL
+	}
+
+	return s.createPayload(text, []SlackAttachment{{
+		Color:     fmt.Sprintf("%x", color),
+		Title:     issueTitle,
+		TitleLink: link,
+		Text:      SlackTextFormatter(body),
+	}}), nil
+}
+
 // Wiki implements payloadConvertor Wiki method
 func (s slackConvertor) Wiki(p *api.WikiPayload) (SlackPayload, error) {
 	text, _, _ := slackPayloadFormatter.getWikiPayloadInfo(p, true)

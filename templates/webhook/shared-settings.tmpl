@@ -66,6 +66,12 @@
 					{{ctx.Locale.Tr "repo.settings.event_wiki"}}
 					<span class="help">{{ctx.Locale.Tr "repo.settings.event_wiki_desc"}}</span>
 				</label>
+				<!-- Mention -->
+				<label>
+					<input name="mention" type="checkbox" {{if .Webhook.Mention}}checked{{end}}>
+					{{ctx.Locale.Tr "repo.settings.event_mention"}}
+					<span class="help">{{ctx.Locale.Tr "repo.settings.event_mention_desc"}}</span>
+				</label>
 			</fieldset>
 			<!-- Issue Events -->
 			<fieldset class="simple-grid grid-2">

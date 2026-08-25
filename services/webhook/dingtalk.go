@@ -157,6 +157,18 @@ func (dc dingtalkConvertor) IssueComment(p *api.IssueCommentPayload) (DingtalkPa
 	return createDingtalkPayload(issueTitle, text+"\r\n\r\n"+p.Comment.Body, "view issue comment", p.Comment.HTMLURL), nil
 }
 
+// Mention implements PayloadConvertor Mention method
+func (dc dingtalkConvertor) Mention(p *api.MentionPayload) (DingtalkPayload, error) {
+	text, issueTitle, _ := dingtalkPayloadFormatter.getMentionPayloadInfo(p)
+
+	body, link := text, p.Issue.HTMLURL
+	if p.Comment != nil {
+		body, link = text+"\r\n\r\n"+p.Comment.Body, p.Comment.HTMLURL
+	}
+
+	return createDingtalkPayload(issueTitle, body, "view mention", link), nil
+}
+
 // PullRequest implements PayloadConvertor PullRequest method
 func (dc dingtalkConvertor) PullRequest(p *api.PullRequestPayload) (DingtalkPayload, error) {
 	text, issueTitle, attachmentText, _ := dingtalkPayloadFormatter.getPullRequestPayloadInfo(p)

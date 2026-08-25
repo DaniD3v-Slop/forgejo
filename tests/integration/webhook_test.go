@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	auth_model "forgejo.org/models/auth"
 	"forgejo.org/models/db"
 	repo_model "forgejo.org/models/repo"
 	"forgejo.org/models/unittest"
@@ -21,6 +22,7 @@ import (
 	"forgejo.org/modules/git"
 	"forgejo.org/modules/gitrepo"
 	"forgejo.org/modules/json"
+	api "forgejo.org/modules/structs"
 	webhook_module "forgejo.org/modules/webhook"
 	"forgejo.org/services/release"
 	"forgejo.org/tests"
@@ -75,6 +77,53 @@ func TestWebhookPayloadRef(t *testing.T) {
 			delete(expected, hookTask.EventType)
 		}
 		assert.Empty(t, expected)
+	})
+}
+
+func TestWebhookMentionEvent(t *testing.T) {
+	onApplicationRun(t, func(t *testing.T, giteaURL *url.URL) {
+		w := unittest.AssertExistsAndLoadBean(t, &webhook_model.Webhook{ID: 1})
+		w.HookEvent = &webhook_module.HookEvent{
+			SendEverything: true,
+		}
+		require.NoError(t, w.UpdateEvent())
+		require.NoError(t, webhook_model.UpdateWebhook(db.DefaultContext, w))
+
+		hookTasks := retrieveHookTasks(t, w.ID, true)
+		hookTasksLenBefore := len(hookTasks)
+
+		session := loginUser(t, "user2")
+		token := getTokenForLoggedInUser(t, session, auth_model.AccessTokenScopeAll)
+
+		// user2 mentions user1 in a comment on issue 1 of user2/repo1
+		req := NewRequestWithJSON(t, "POST", "/api/v1/repos/user2/repo1/issues/1/comments", &api.CreateIssueCommentOption{
+			Body: "ping @user1 please take a look",
+		}).AddTokenAuth(token)
+		MakeRequest(t, req, http.StatusCreated)
+
+		hookTasks = retrieveHookTasks(t, w.ID, false)
+
+		var mentionTask *webhook_model.HookTask
+		for _, hookTask := range hookTasks[:len(hookTasks)-hookTasksLenBefore] {
+			if hookTask.EventType == webhook_module.HookEventMention {
+				require.Nil(t, mentionTask, "expected exactly one mention hook task")
+				mentionTask = hookTask
+			}
+		}
+		require.NotNil(t, mentionTask, "expected a mention hook task")
+
+		var payload api.MentionPayload
+		require.NoError(t, json.Unmarshal([]byte(mentionTask.PayloadContent), &payload))
+		assert.Equal(t, api.HookMentionMentioned, payload.Action)
+		require.NotNil(t, payload.Mentioned)
+		assert.Equal(t, "user1", payload.Mentioned.UserName)
+		require.NotNil(t, payload.Sender)
+		assert.Equal(t, "user2", payload.Sender.UserName)
+		require.NotNil(t, payload.Issue)
+		assert.Equal(t, int64(1), payload.Issue.Index)
+		require.NotNil(t, payload.Comment)
+		assert.Contains(t, payload.Comment.Body, "@user1")
+		assert.False(t, payload.IsPull)
 	})
 }
 
