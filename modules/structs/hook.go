@@ -38,8 +38,20 @@ type Hook struct {
 // HookList represents a list of API hook.
 type HookList []*Hook
 
-// CreateHookOptionConfig has all config options in it
-// required are "content_type" and "url" Required
+// CreateHookOptionConfig has all config options in it.
+//
+// It is a free-form string map whose recognised keys depend on the hook type.
+// Required keys:
+//   - "url": target URL the webhook payload is delivered to.
+//   - "content_type": payload encoding, either "json" or "form".
+//
+// Optional keys:
+//   - "secret": shared secret used to sign the payload.
+//   - "is_system_webhook": "true" to create a system webhook that fires on
+//     events across every repository. Admin (/admin/hooks) hooks only;
+//     defaults to "false", which creates a default webhook instead.
+//   - "channel", "username", "icon_url", "color": display options honoured by
+//     the Slack and Discord hook types.
 type CreateHookOptionConfig map[string]string
 
 // CreateHookOption options when create a hook

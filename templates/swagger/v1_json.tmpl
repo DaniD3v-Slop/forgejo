@@ -13,15 +13,15 @@
   ],
   "swagger": "2.0",
   "info": {
-    "description": "This documentation describes the Forgejo API.",
-    "title": "Forgejo API",
+    "description": "This documentation describes the Gitea API.",
+    "title": "Gitea API",
     "license": {
-      "name": "This file is distributed under the MIT license for the purpose of interoperability",
+      "name": "MIT",
       "url": "http://opensource.org/licenses/MIT"
     },
     "version": "{{AppVer | JSEscape}}"
   },
-  "basePath": "{{AppSubUrl | JSEscape}}/api/v1",
+  "basePath": "/api/v1",
   "paths": {
     "/actions/run": {
       "get": {
@@ -25228,8 +25228,9 @@
       "x-go-package": "forgejo.org/modules/structs"
     },
     "CreateHookOptionConfig": {
-      "description": "CreateHookOptionConfig has all config options in it\nrequired are \"content_type\" and \"url\" Required",
+      "description": "It is a free-form string map whose recognised keys depend on the hook type.\nRequired keys:\n- \"url\": target URL the webhook payload is delivered to.\n- \"content_type\": payload encoding, either \"json\" or \"form\".\n\nOptional keys:\n- \"secret\": shared secret used to sign the payload.\n- \"is_system_webhook\": \"true\" to create a system webhook that fires on\nevents across every repository. Admin (/admin/hooks) hooks only;\ndefaults to \"false\", which creates a default webhook instead.\n- \"channel\", \"username\", \"icon_url\", \"color\": display options honoured by\nthe Slack and Discord hook types.",
       "type": "object",
+      "title": "CreateHookOptionConfig has all config options in it.",
       "additionalProperties": {
         "type": "string"
       },
