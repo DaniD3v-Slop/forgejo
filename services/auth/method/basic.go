@@ -45,7 +45,7 @@ func (b *Basic) Verify(req *http.Request, w http.ResponseWriter, _ auth.SessionS
 
 	uname, passwd, _ := base.BasicAuthDecode(auths[1])
 
-	if !setting.Service.EnableBasicAuth {
+	if !setting.Service.EnableBasicAuth && !allowBotTokenManagementBasic(req, uname) {
 		return &auth.AuthenticationAttemptedIncorrectCredential{Error: errors.New("basic authentication by username & password is disabled")}
 	}
 
@@ -76,6 +76,19 @@ func (b *Basic) Verify(req *http.Request, w http.ResponseWriter, _ auth.SessionS
 
 	log.Trace("Basic Authorization: Logged in user %-v", u)
 	return &auth.AuthenticationSuccess{Result: &basicPaswordAuthenticationResult{user: u}}
+}
+
+// allowBotTokenManagementBasic keeps password auth disabled for normal API and
+// Git requests while allowing one configured bot to mint and revoke its own
+// short-lived tokens. The route still checks reqSelfOrAdmin after sign-in.
+func allowBotTokenManagementBasic(req *http.Request, username string) bool {
+	bot := setting.Service.BasicAuthTokenUser
+	if bot == "" || username != bot {
+		return false
+	}
+	path := "/api/v1/users/" + bot + "/tokens"
+	return req.Method == http.MethodPost && req.URL.Path == path ||
+		req.Method == http.MethodDelete && strings.HasPrefix(req.URL.Path, path+"/")
 }
 
 func getOtpHeader(header http.Header) string {
