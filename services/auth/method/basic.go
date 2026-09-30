@@ -79,7 +79,7 @@ func (b *Basic) Verify(req *http.Request, w http.ResponseWriter, _ auth.SessionS
 }
 
 // allowBotTokenManagementBasic keeps password auth disabled for normal API and
-// Git requests while allowing one configured bot to mint and revoke its own
+// Git requests while allowing one configured bot to list, mint, and revoke its own
 // short-lived tokens. The route still checks reqSelfOrAdmin after sign-in.
 func allowBotTokenManagementBasic(req *http.Request, username string) bool {
 	bot := setting.Service.BasicAuthTokenUser
@@ -87,7 +87,7 @@ func allowBotTokenManagementBasic(req *http.Request, username string) bool {
 		return false
 	}
 	path := "/api/v1/users/" + bot + "/tokens"
-	return req.Method == http.MethodPost && req.URL.Path == path ||
+	return (req.Method == http.MethodGet || req.Method == http.MethodPost) && req.URL.Path == path ||
 		req.Method == http.MethodDelete && strings.HasPrefix(req.URL.Path, path+"/")
 }
 

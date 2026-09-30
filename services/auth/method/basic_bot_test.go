@@ -20,9 +20,12 @@ func TestAllowBotTokenManagementBasic(t *testing.T) {
 		method, path, user string
 		want               bool
 	}{
+		{http.MethodGet, "/api/v1/users/forgeclaw/tokens", "forgeclaw", true},
 		{http.MethodPost, "/api/v1/users/forgeclaw/tokens", "forgeclaw", true},
 		{http.MethodDelete, "/api/v1/users/forgeclaw/tokens/123", "forgeclaw", true},
-		{http.MethodGet, "/api/v1/users/forgeclaw/tokens", "forgeclaw", false},
+		{http.MethodGet, "/api/v1/users/alice/tokens", "forgeclaw", false},
+		{http.MethodGet, "/api/v1/users/forgeclaw/tokens/123", "forgeclaw", false},
+		{http.MethodGet, "/api/v1/users/forgeclaw/tokens", "alice", false},
 		{http.MethodPost, "/api/v1/users/forgeclaw/tokens", "alice", false},
 		{http.MethodPost, "/api/v1/users/alice/tokens", "forgeclaw", false},
 		{http.MethodPost, "/api/v1/repos/example/repo", "forgeclaw", false},
