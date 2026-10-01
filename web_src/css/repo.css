@@ -195,12 +195,9 @@ td .commit-summary {
   white-space: normal;
 }
 
-.commit-list .js-toggle-commit-body {
-  margin: 0 0 0 0.25em;
-}
-
-.commit-list .commit-status {
-  margin: 0 0 0 0.25em;
+.commit-list td.message > .message-row {
+  display: flex;
+  gap: 0.25em;
 }
 
 .latest-commit {
@@ -888,11 +885,31 @@ citation-information .tab:not(.active) {
 
 .singular-commit {
   display: flex;
-  align-items: center;
+  align-items: first baseline;
+}
+
+.singular-commit .message-wrapper {
+  position: relative;
+  flex-grow: 1;
+}
+
+.singular-commit .message-wrapper .commit-summary {
+  display: inline-block;
+  width: calc(100% - 32px);
+  vertical-align: middle;
+}
+
+.singular-commit .commit-body-toggle > summary {
+  position: absolute;
+  top: 2.5px;
+  inset-inline-end: 0;
 }
 
 .singular-commit .badge {
   height: 30px !important;
+  flex-shrink: 0;
+  position: relative;
+  top: 8px; /* align with first baseline */
 }
 
 .singular-commit .shabox .sha.label {
@@ -2233,6 +2250,16 @@ tbody.commit-list {
   tr.commit-list {
     width: 1127px;
   }
+}
+
+details.commit-body-toggle {
+  display: contents;
+  width: fit-content;
+}
+
+details.commit-body-toggle > summary.ellipsis-button {
+  display: inline-block;
+  width: fit-content;
 }
 
 .commit-body {
